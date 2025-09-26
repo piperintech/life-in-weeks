@@ -1,1 +1,610 @@
-# life-in-weeks
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life in Weeks - Daily Reflection</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState } = React;
+
+        const TRANSLATIONS = {
+          "en-US": {
+            "pageTitle": "Life in weeks",
+            "pageSubtitle": "A simple visualization to reflect on the passage of time",
+            "birthDateQuestion": "Enter a birthdate",
+            "visualizeButton": "Visualize your time",
+            "startOverButton": "Start over",
+            "lifeInWeeksTitle": "Your life in weeks",
+            "weekHoverPast": " A week from your past",
+            "weekHoverCurrent": " Your current week",
+            "weekHoverFuture": " A week in your potential future",
+            "legendPast": "Past",
+            "legendPresent": "Present",
+            "legendFuture": "Future",
+            "lifeHighlightsTitle": "Life highlights",
+            "lifeHighlightsWeeks": "You've lived",
+            "lifeHighlightsWeeksEnd": "weeks, which is",
+            "lifeHighlightsPercent": "of a full life.",
+            "lifeHighlightsDays": "That's",
+            "lifeHighlightsDaysEnd": "days of experience and approximately",
+            "lifeHighlightsSeasonsEnd": "seasons observed.",
+            "lifeHighlightsHeartbeats": "Your heart has beaten approximately",
+            "lifeHighlightsHeartbeatsEnd": "times.",
+            "lifeHighlightsBreaths": "You've taken around",
+            "lifeHighlightsBreathsMiddle": "breaths and slept about",
+            "lifeHighlightsBreathsEnd": "hours.",
+            "societalContextTitle": "Societal context",
+            "societalPopulation": "During your lifetime, humanity's population has grown from",
+            "societalPopulationEnd": "to over",
+            "societalPopulationFinal": "billion people.",
+            "societalMeetings": "The average person will meet around",
+            "societalMeetingsMiddle": "people in their lifetime. You've likely already met approximately",
+            "societalMeetingsEnd": "individuals.",
+            "societalBirthsDeaths": "Since your birth, humanity has collectively experienced approximately",
+            "societalBirthsMiddle": "births and",
+            "societalDeathsEnd": "deaths.",
+            "cosmicPerspectiveTitle": "Cosmic perspective",
+            "cosmicEarthTravel": "Since your birth, Earth has traveled approximately",
+            "cosmicEarthTravelEnd": "kilometers through space around the Sun.",
+            "cosmicUniverse": "The observable universe is about",
+            "cosmicUniverseMiddle": "billion light-years across, meaning light takes",
+            "cosmicUniverseMiddle2": "billion years to cross it. Your entire lifespan is just",
+            "cosmicUniverseEnd": "of the universe's age.",
+            "cosmicSolarSystem": "During your lifetime, our solar system has moved about",
+            "cosmicSolarSystemEnd": "kilometers through the Milky Way galaxy.",
+            "naturalWorldTitle": "Natural world",
+            "naturalLunarCycles": "You've experienced approximately",
+            "naturalLunarMiddle": "lunar cycles and",
+            "naturalLunarEnd": "trips around the Sun.",
+            "naturalSequoia": "A giant sequoia tree can live over 3,000 years. Your current age is",
+            "naturalSequoiaEnd": "of its potential lifespan.",
+            "naturalCells": "During your lifetime, your body has replaced most of its cells several times. You are not made of the same atoms you were born with."
+          }
+        };
+
+        const appLocale = 'en-US';
+        const browserLocale = navigator.languages?.[0] || navigator.language || 'en-US';
+        const findMatchingLocale = (locale) => {
+          if (TRANSLATIONS[locale]) return locale;
+          const lang = locale.split('-')[0];
+          const match = Object.keys(TRANSLATIONS).find(key => key.startsWith(lang + '-'));
+          return match || 'en-US';
+        };
+        const locale = findMatchingLocale(browserLocale);
+        const t = (key) => TRANSLATIONS[locale]?.[key] || TRANSLATIONS['en-US'][key] || key;
+
+        function WeeksOfLife() {
+          const [step, setStep] = useState(1);
+          const [birthdate, setBirthdate] = useState('');
+          const [stats, setStats] = useState(null);
+          const [showHoverData, setShowHoverData] = useState(false);
+          const [hoverWeek, setHoverWeek] = useState(null);
+          
+          const calculateStats = (date) => {
+            const birthDate = new Date(date);
+            const today = new Date();
+            const birthYear = birthDate.getFullYear();
+            
+            // Calculate weeks lived
+            const msInWeek = 1000 * 60 * 60 * 24 * 7;
+            const weeksLived = Math.floor((today - birthDate) / msInWeek);
+            
+            // Assuming average lifespan of ~80 years (4160 weeks)
+            const totalWeeks = 4160;
+            const weeksRemaining = totalWeeks - weeksLived;
+            const percentageLived = Math.round((weeksLived / totalWeeks) * 100);
+            
+            // Calculate days lived
+            const msInDay = 1000 * 60 * 60 * 24;
+            const daysLived = Math.floor((today - birthDate) / msInDay);
+            
+            // Calculate hours slept (assuming 8 hours per day)
+            const hoursSlept = Math.floor(daysLived * 8);
+            
+            // Calculate heartbeats (average 70 bpm)
+            const heartbeats = Math.floor(daysLived * 24 * 60 * 70);
+            
+            // Calculate breaths (average 16 breaths per minute)
+            const breaths = Math.floor(daysLived * 24 * 60 * 16);
+
+            // Calculate seasons experienced
+            const seasons = Math.floor(daysLived / 91.25);
+            
+            return {
+              weeksLived,
+              totalWeeks,
+              weeksRemaining,
+              percentageLived,
+              daysLived,
+              hoursSlept,
+              heartbeats,
+              breaths,
+              seasons,
+              birthYear
+            };
+          };
+          
+          // Helper functions for contextual statistics
+          const getPopulationAtYear = (year) => {
+            // World population estimates by year (in billions)
+            const populationData = {
+              1950: 2.5,
+              1960: 3.0,
+              1970: 3.7,
+              1980: 4.4,
+              1990: 5.3,
+              2000: 6.1,
+              2010: 6.9,
+              2020: 7.8,
+              2025: 8.1
+            };
+            
+            // Find the closest year in our data
+            const years = Object.keys(populationData).map(Number);
+            const closestYear = years.reduce((prev, curr) => 
+              Math.abs(curr - year) < Math.abs(prev - year) ? curr : prev
+            );
+            
+            return Math.round(populationData[closestYear] * 1000000000);
+          };
+          
+          const getAverageBirthsPerDay = () => {
+            // Approximately 385,000 births per day globally (as of 2023)
+            return 385000;
+          };
+          
+          const getAverageDeathsPerDay = () => {
+            // Approximately 166,000 deaths per day globally (as of 2023)
+            return 166000;
+          };
+
+          const handleSubmit = () => {
+            setStats(calculateStats(birthdate));
+            setStep(2);
+          };
+
+          const getFormattedNumber = (num) => {
+            return new Intl.NumberFormat().format(num);
+          };
+
+          const renderWeekGrid = () => {
+            if (!stats) return null;
+            
+            const rows = [];
+            const weeksPerRow = 52;
+            const totalRows = Math.ceil(stats.totalWeeks / weeksPerRow);
+            
+            for (let row = 0; row < totalRows; row++) {
+              const weekCells = [];
+              for (let col = 0; col < weeksPerRow; col++) {
+                const weekNumber = row * weeksPerRow + col;
+                if (weekNumber < stats.totalWeeks) {
+                  const isPast = weekNumber < stats.weeksLived;
+                  const isCurrent = weekNumber === stats.weeksLived;
+                  
+                  let cellClass = "w-2 h-2 m-0.5 rounded-sm transition-all ";
+                  if (isPast) {
+                    cellClass += "bg-gray-800 ";
+                  } else if (isCurrent) {
+                    cellClass += "bg-blue-500 animate-pulse ";
+                  } else {
+                    cellClass += "bg-gray-200 ";
+                  }
+                  
+                  weekCells.push(
+                    React.createElement('div', {
+                      key: weekNumber,
+                      className: cellClass,
+                      onMouseEnter: () => {
+                        setHoverWeek(weekNumber);
+                        setShowHoverData(true);
+                      },
+                      onMouseLeave: () => setShowHoverData(false)
+                    })
+                  );
+                }
+              }
+              
+              rows.push(
+                React.createElement('div', {
+                  key: row,
+                  className: "flex"
+                }, weekCells)
+              );
+            }
+            
+            return React.createElement('div', {
+              className: "mt-8 bg-white p-6 rounded-md shadow-sm"
+            }, [
+              React.createElement('h2', {
+                key: "title",
+                className: "text-lg font-normal mb-4 text-gray-800"
+              }, t('lifeInWeeksTitle')),
+              React.createElement('div', {
+                key: "grid",
+                className: "flex flex-col"
+              }, rows),
+              showHoverData && React.createElement('div', {
+                key: "hover",
+                className: "mt-4 text-sm text-gray-600"
+              }, [
+                `Week ${hoverWeek + 1}: `,
+                hoverWeek < stats.weeksLived ? 
+                  t('weekHoverPast') : 
+                  hoverWeek === stats.weeksLived ? 
+                  t('weekHoverCurrent') : 
+                  t('weekHoverFuture')
+              ]),
+              React.createElement('div', {
+                key: "legend",
+                className: "flex mt-6 text-sm"
+              }, [
+                React.createElement('div', {
+                  key: "past",
+                  className: "flex items-center mr-4"
+                }, [
+                  React.createElement('div', {
+                    key: "color",
+                    className: "w-3 h-3 bg-gray-800 mr-2"
+                  }),
+                  React.createElement('span', {
+                    key: "text",
+                    className: "text-gray-600"
+                  }, t('legendPast'))
+                ]),
+                React.createElement('div', {
+                  key: "present",
+                  className: "flex items-center mr-4"
+                }, [
+                  React.createElement('div', {
+                    key: "color",
+                    className: "w-3 h-3 bg-blue-500 mr-2"
+                  }),
+                  React.createElement('span', {
+                    key: "text",
+                    className: "text-gray-600"
+                  }, t('legendPresent'))
+                ]),
+                React.createElement('div', {
+                  key: "future",
+                  className: "flex items-center"
+                }, [
+                  React.createElement('div', {
+                    key: "color",
+                    className: "w-3 h-3 bg-gray-200 mr-2"
+                  }),
+                  React.createElement('span', {
+                    key: "text",
+                    className: "text-gray-600"
+                  }, t('legendFuture'))
+                ])
+              ])
+            ]);
+          };
+
+          const renderStats = () => {
+            if (!stats) return null;
+            
+            return React.createElement('div', {
+              className: "mt-8 space-y-6"
+            }, [
+              // Life highlights section
+              React.createElement('div', {
+                key: "highlights",
+                className: "bg-white p-6 rounded-md shadow-sm"
+              }, [
+                React.createElement('h2', {
+                  key: "title",
+                  className: "text-lg font-normal mb-4 text-gray-800"
+                }, t('lifeHighlightsTitle')),
+                React.createElement('div', {
+                  key: "content",
+                  className: "space-y-4"
+                }, [
+                  React.createElement('p', {
+                    key: "weeks",
+                    className: "text-gray-600"
+                  }, [
+                    t('lifeHighlightsWeeks') + ' ',
+                    React.createElement('span', {
+                      key: "num",
+                      className: "text-gray-900 font-medium"
+                    }, getFormattedNumber(stats.weeksLived)),
+                    ' ' + t('lifeHighlightsWeeksEnd') + ' ',
+                    React.createElement('span', {
+                      key: "percent",
+                      className: "text-gray-900 font-medium"
+                    }, stats.percentageLived + '%'),
+                    ' ' + t('lifeHighlightsPercent')
+                  ]),
+                  React.createElement('p', {
+                    key: "days",
+                    className: "text-gray-600"
+                  }, [
+                    t('lifeHighlightsDays') + ' ',
+                    React.createElement('span', {
+                      key: "num",
+                      className: "text-gray-900 font-medium"
+                    }, getFormattedNumber(stats.daysLived)),
+                    ' ' + t('lifeHighlightsDaysEnd') + ' ',
+                    React.createElement('span', {
+                      key: "seasons",
+                      className: "text-gray-900 font-medium"
+                    }, getFormattedNumber(stats.seasons)),
+                    ' ' + t('lifeHighlightsSeasonsEnd')
+                  ]),
+                  React.createElement('p', {
+                    key: "heartbeats",
+                    className: "text-gray-600"
+                  }, [
+                    t('lifeHighlightsHeartbeats') + ' ',
+                    React.createElement('span', {
+                      key: "num",
+                      className: "text-gray-900 font-medium"
+                    }, getFormattedNumber(stats.heartbeats)),
+                    ' ' + t('lifeHighlightsHeartbeatsEnd')
+                  ]),
+                  React.createElement('p', {
+                    key: "breaths",
+                    className: "text-gray-600"
+                  }, [
+                    t('lifeHighlightsBreaths') + ' ',
+                    React.createElement('span', {
+                      key: "breathsNum",
+                      className: "text-gray-900 font-medium"
+                    }, getFormattedNumber(stats.breaths)),
+                    ' ' + t('lifeHighlightsBreathsMiddle') + ' ',
+                    React.createElement('span', {
+                      key: "sleepNum",
+                      className: "text-gray-900 font-medium"
+                    }, getFormattedNumber(stats.hoursSlept)),
+                    ' ' + t('lifeHighlightsBreathsEnd')
+                  ])
+                ])
+              ]),
+              
+              // Societal context section
+              React.createElement('div', {
+                key: "societal",
+                className: "bg-white p-6 rounded-md shadow-sm"
+              }, [
+                React.createElement('h2', {
+                  key: "title",
+                  className: "text-lg font-normal mb-4 text-gray-800"
+                }, t('societalContextTitle')),
+                React.createElement('div', {
+                  key: "content",
+                  className: "space-y-4"
+                }, [
+                  React.createElement('p', {
+                    key: "population",
+                    className: "text-gray-600"
+                  }, [
+                    t('societalPopulation') + ' ',
+                    stats.birthYear && React.createElement('span', {
+                      key: "birthPop",
+                      className: "text-gray-900 font-medium"
+                    }, getFormattedNumber(getPopulationAtYear(stats.birthYear))),
+                    ' ' + t('societalPopulationEnd') + ' ',
+                    React.createElement('span', {
+                      key: "currentPop",
+                      className: "text-gray-900 font-medium"
+                    }, '8'),
+                    ' ' + t('societalPopulationFinal')
+                  ]),
+                  React.createElement('p', {
+                    key: "meetings",
+                    className: "text-gray-600"
+                  }, [
+                    t('societalMeetings') + ' ',
+                    React.createElement('span', {
+                      key: "total",
+                      className: "text-gray-900 font-medium"
+                    }, '80,000'),
+                    ' ' + t('societalMeetingsMiddle') + ' ',
+                    React.createElement('span', {
+                      key: "met",
+                      className: "text-gray-900 font-medium"
+                    }, getFormattedNumber(Math.round(80000 * (stats.percentageLived/100)))),
+                    ' ' + t('societalMeetingsEnd')
+                  ]),
+                  React.createElement('p', {
+                    key: "birthsDeaths",
+                    className: "text-gray-600"
+                  }, [
+                    t('societalBirthsDeaths') + ' ',
+                    React.createElement('span', {
+                      key: "births",
+                      className: "text-gray-900 font-medium"
+                    }, getFormattedNumber(Math.round(stats.daysLived * getAverageBirthsPerDay()))),
+                    ' ' + t('societalBirthsMiddle') + ' ',
+                    React.createElement('span', {
+                      key: "deaths",
+                      className: "text-gray-900 font-medium"
+                    }, getFormattedNumber(Math.round(stats.daysLived * getAverageDeathsPerDay()))),
+                    ' ' + t('societalDeathsEnd')
+                  ])
+                ])
+              ]),
+              
+              // Cosmic perspective section
+              React.createElement('div', {
+                key: "cosmic",
+                className: "bg-white p-6 rounded-md shadow-sm"
+              }, [
+                React.createElement('h2', {
+                  key: "title",
+                  className: "text-lg font-normal mb-4 text-gray-800"
+                }, t('cosmicPerspectiveTitle')),
+                React.createElement('div', {
+                  key: "content",
+                  className: "space-y-4"
+                }, [
+                  React.createElement('p', {
+                    key: "earth",
+                    className: "text-gray-600"
+                  }, [
+                    t('cosmicEarthTravel') + ' ',
+                    React.createElement('span', {
+                      key: "distance",
+                      className: "text-gray-900 font-medium"
+                    }, getFormattedNumber(Math.round(stats.daysLived * 1.6 * 1000000))),
+                    ' ' + t('cosmicEarthTravelEnd')
+                  ]),
+                  React.createElement('p', {
+                    key: "universe",
+                    className: "text-gray-600"
+                  }, [
+                    t('cosmicUniverse') + ' ',
+                    React.createElement('span', {
+                      key: "size1",
+                      className: "text-gray-900 font-medium"
+                    }, '93'),
+                    ' ' + t('cosmicUniverseMiddle') + ' ',
+                    React.createElement('span', {
+                      key: "size2",
+                      className: "text-gray-900 font-medium"
+                    }, '93'),
+                    ' ' + t('cosmicUniverseMiddle2') + ' ',
+                    React.createElement('span', {
+                      key: "percent",
+                      className: "text-gray-900 font-medium"
+                    }, (80/13800000000 * 100).toFixed(10) + '%'),
+                    ' ' + t('cosmicUniverseEnd')
+                  ]),
+                  React.createElement('p', {
+                    key: "solar",
+                    className: "text-gray-600"
+                  }, [
+                    t('cosmicSolarSystem') + ' ',
+                    React.createElement('span', {
+                      key: "distance",
+                      className: "text-gray-900 font-medium"
+                    }, getFormattedNumber(Math.round(stats.daysLived * 24 * 828000))),
+                    ' ' + t('cosmicSolarSystemEnd')
+                  ])
+                ])
+              ]),
+              
+              // Natural world section
+              React.createElement('div', {
+                key: "natural",
+                className: "bg-white p-6 rounded-md shadow-sm"
+              }, [
+                React.createElement('h2', {
+                  key: "title",
+                  className: "text-lg font-normal mb-4 text-gray-800"
+                }, t('naturalWorldTitle')),
+                React.createElement('div', {
+                  key: "content",
+                  className: "space-y-4"
+                }, [
+                  React.createElement('p', {
+                    key: "lunar",
+                    className: "text-gray-600"
+                  }, [
+                    t('naturalLunarCycles') + ' ',
+                    React.createElement('span', {
+                      key: "cycles",
+                      className: "text-gray-900 font-medium"
+                    }, getFormattedNumber(Math.round(stats.daysLived / 29.53))),
+                    ' ' + t('naturalLunarMiddle') + ' ',
+                    React.createElement('span', {
+                      key: "years",
+                      className: "text-gray-900 font-medium"
+                    }, getFormattedNumber(Math.floor(stats.daysLived / 365.25))),
+                    ' ' + t('naturalLunarEnd')
+                  ]),
+                  React.createElement('p', {
+                    key: "sequoia",
+                    className: "text-gray-600"
+                  }, [
+                    t('naturalSequoia') + ' ',
+                    React.createElement('span', {
+                      key: "percent",
+                      className: "text-gray-900 font-medium"
+                    }, ((stats.daysLived / 365.25) / 3000 * 100).toFixed(2) + '%'),
+                    ' ' + t('naturalSequoiaEnd')
+                  ]),
+                  React.createElement('p', {
+                    key: "cells",
+                    className: "text-gray-600"
+                  }, t('naturalCells'))
+                ])
+              ])
+            ]);
+          };
+
+          const handleReset = () => {
+            setBirthdate('');
+            setStats(null);
+            setStep(1);
+          };
+
+          return React.createElement('div', {
+            className: "min-h-screen bg-gray-50 p-6 pt-16"
+          }, 
+            React.createElement('div', {
+              className: "max-w-md mx-auto"
+            }, [
+              React.createElement('h1', {
+                key: "title",
+                className: "text-2xl font-normal text-gray-800 mb-2"
+              }, t('pageTitle')),
+              React.createElement('p', {
+                key: "subtitle",
+                className: "text-gray-600 mb-8"
+              }, t('pageSubtitle')),
+              
+              step === 1 ? 
+                React.createElement('div', {
+                  key: "form",
+                  className: "bg-white p-6 rounded-md shadow-sm"
+                }, [
+                  React.createElement('h2', {
+                    key: "question",
+                    className: "text-lg font-normal mb-4 text-gray-800"
+                  }, t('birthDateQuestion')),
+                  React.createElement('div', {
+                    key: "inputs"
+                  }, [
+                    React.createElement('input', {
+                      key: "date",
+                      type: "date",
+                      className: "w-full p-2 border border-gray-300 rounded-md mb-4 text-gray-800",
+                      value: birthdate,
+                      onChange: (e) => setBirthdate(e.target.value),
+                      required: true
+                    }),
+                    React.createElement('button', {
+                      key: "submit",
+                      onClick: handleSubmit,
+                      className: "w-full bg-gray-800 text-white py-2 rounded-md hover:bg-gray-700 transition-colors",
+                      disabled: !birthdate
+                    }, t('visualizeButton'))
+                  ])
+                ]) :
+                [
+                  renderWeekGrid(),
+                  renderStats(),
+                  React.createElement('button', {
+                    key: "reset",
+                    onClick: handleReset,
+                    className: "mt-8 w-full bg-gray-200 text-gray-800 py-2 rounded-md hover:bg-gray-300 transition-colors"
+                  }, t('startOverButton'))
+                ]
+            ])
+          );
+        }
+
+        ReactDOM.render(React.createElement(WeeksOfLife), document.getElementById('root'));
+    </script>
+</body>
+</html># life-in-weeks
